@@ -6,29 +6,30 @@ void help() {
     
     printf("asm8085 v" VERSION " (build " BUILD ")\n\n");
     printf("usage: asm8085 -h | [-o output] [-l file] source\n");
-    printf("\t-h       \tShow help\n");
-    printf("\t-o <file>\tSet output file\n");
-    printf("\t-l <file>\tWrite listing\n");
+    printf("\t-h ............ Show help\n");
+    printf("\t-o <file> ..... Set output file\n");
+    printf("\t-l <file> ..... Write listing\n");
+    printf("\t-c ............ Output CO file for NEC PC-8201A\n");
     
     exit(0);
 }
 
 // Replace extension by '.bin'
-char *make_bin_file(const char *fname) {
+char *change_extension(const char *fname, const char *new_ext) {
     char *bin, *dot, *slash; 
     bin = copy_string(fname);
-    bin = realloc(bin, strlen(bin)+5); // make sure there is room
+    bin = realloc(bin, strlen(bin)+strlen(new_ext)+1); // make sure there is room
 
     // Find last slash and dot
     slash = strrchr(bin, '/');
     dot = strrchr(bin, '.');
     
     if (dot == NULL || slash > dot) {
-        // No dot, or slash after dot: append ".bin" 
-        strcat(bin, ".bin");
+        // No dot, or slash after dot: append new_ext
+        strcat(bin, new_ext);
     } else {
-        // Dot, replace extension by ".bin"
-        strcpy(dot, ".bin");
+        // Dot, replace extension by new_ext
+        strcpy(dot, new_ext);
     }
     
     return bin;
@@ -40,6 +41,7 @@ int main(int argc, char **argv) {
     unsigned char *mem;
     FILE *outf, *listf; 
     size_t outsize;
+    int co_file = 0;
     
     // Allocate 64K for binary output
     if ((mem = malloc(65536)) == NULL) {
@@ -54,7 +56,7 @@ int main(int argc, char **argv) {
     }
     
     // Handle arguments
-    while((c = getopt(argc, argv, "ho:l:")) != -1) {
+    while((c = getopt(argc, argv, "ho:l:c")) != -1) {
         switch(c) {
             case '?':
                 if (optopt == 'o' || optopt == 'l') {
@@ -68,6 +70,7 @@ int main(int argc, char **argv) {
             case 'h': help(); break;
             case 'o': outp = optarg; break;
             case 'l': list = optarg; break;
+            case 'c': co_file = 1; break;
         }
     }
     
@@ -78,8 +81,8 @@ int main(int argc, char **argv) {
     
     inp = argv[optind];
     
-    // If no output file is given, change the input extension into '.bin'
-    if (outp == NULL) outp = make_bin_file(inp);
+    // If no output file is given, change the input extension
+    if (outp == NULL) outp = change_extension(inp, co_file ? ".co" : ".bin");
     
     // Try to assemble the file. 
     struct asmstate *state = init_asmstate();
@@ -104,6 +107,9 @@ int main(int argc, char **argv) {
     }
     
     outsize = make_binary(lines, mem);
+
+    if (co_file) write_co_file_header(lines, outsize, outf);
+
     if (fwrite(mem, 1, outsize, outf) != outsize) {
         fprintf(stderr, "write error: %s\n", strerror(errno));
         exit(1);

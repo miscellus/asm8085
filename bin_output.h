@@ -12,5 +12,6 @@
 // It is assume that the given buffer is at least 64K.
 // Returns the amount of bytes written. 
 size_t make_binary(const struct line *lines, unsigned char *buf);
+void write_co_file_header(const struct line *line, size_t length, FILE *outf);
 
 #endif 

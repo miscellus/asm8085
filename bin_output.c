@@ -20,3 +20,23 @@ size_t make_binary(const struct line *lines, unsigned char *buf) {
         
     return idx; 
 }
+
+void write_co_file_header(const struct line *line, size_t length, FILE *outf)
+{
+    while (line && line->instr.instr != DIR_org) {
+        line = line->next_line;
+    }
+
+    int loc = 0;
+    if (line) loc = line->location;
+
+    struct {uint16_t org, len, entry;} header;
+    header.org = loc;
+    header.len = length;
+    header.entry = loc;
+    if (fwrite(&header, sizeof(header), 1, outf) != 1) {
+        fprintf(stderr, "write error: %s\n", strerror(errno));
+        fclose(outf);
+        exit(1);
+    }
+}
