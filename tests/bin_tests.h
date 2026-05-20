@@ -29,7 +29,7 @@ TEST(file_##name \
     char *binfile = "test_inputs/" #name ".bin"; \
     char *asmfile = "test_inputs/" #name ".asm"; \
     /* read the binary file to match the assembly output to */ \
-    if (!(matchfile = fopen(binfile, "r"))) FAIL("could not open binary input file %s", binfile); \
+    if (!(matchfile = fopen(binfile, "rb"))) FAIL("could not open binary input file %s", binfile); \
     filesize = fread(match, sizeof(char), MEMSZ, matchfile); \
     /* parse, assemble, etc. the asm input file */ \
     state = init_asmstate(); \
