@@ -104,7 +104,7 @@ int dir_incbin(struct asmstate *state) {
     
     // Open the file
     char *fname = cur_line->argmts->data.string;
-    FILE *file = fopen(fname, "r");
+    FILE *file = fopen(fname, "rb");
     if (file == NULL) {
         error_on_line(cur_line, "cannot open file: %s", fname);
         return FALSE;
