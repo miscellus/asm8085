@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
     // Write the binary file
     if (!strcmp(outp, "-")) {
         outf = stdout;  // allow output to STDOUT
-    } else if ((outf = fopen(outp, "w")) == NULL) {
+    } else if ((outf = fopen(outp, "wb")) == NULL) {
         fprintf(stderr, "cannot open %s for writing: %s\n", outp, strerror(errno));
         exit(1);
     }
