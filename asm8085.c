@@ -5,10 +5,11 @@ char startdir[PATH_MAX]; // this stores the directory in which the command is ru
 void help() {
     
     printf("asm8085 v" VERSION " (build " BUILD ")\n\n");
-    printf("usage: asm8085 -h | [-o output] [-l file] source\n");
+    printf("usage: asm8085 -h | [-o output] [-l file] [-d file] [-c] source\n");
     printf("\t-h ............ Show help\n");
     printf("\t-o <file> ..... Set output file\n");
     printf("\t-l <file> ..... Write listing\n");
+    printf("\t-d <file> ..... Write debug info\n");
     printf("\t-c ............ Output CO file for NEC PC-8201A\n");
     
     exit(0);
@@ -37,9 +38,9 @@ char *change_extension(const char *fname, const char *new_ext) {
 
 int main(int argc, char **argv) {
     int c;
-    char *inp=NULL, *outp=NULL, *list=NULL; 
+    char *inp=NULL, *outp=NULL, *list=NULL, *debug_info=NULL;
     unsigned char *mem;
-    FILE *outf, *listf; 
+    FILE *outf, *listf, *debug_info_f;
     size_t outsize;
     int co_file = 0;
     
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
     }
     
     // Handle arguments
-    while((c = getopt(argc, argv, "ho:l:c")) != -1) {
+    while((c = getopt(argc, argv, "ho:l:d:c")) != -1) {
         switch(c) {
             case '?':
                 if (optopt == 'o' || optopt == 'l') {
@@ -70,6 +71,7 @@ int main(int argc, char **argv) {
             case 'h': help(); break;
             case 'o': outp = optarg; break;
             case 'l': list = optarg; break;
+            case 'd': debug_info = optarg; break;
             case 'c': co_file = 1; break;
         }
     }
@@ -121,13 +123,24 @@ int main(int argc, char **argv) {
     if (list != NULL) {
         if (!strcmp(list, "-")) {
             listf = stdout; // allow listing output to stdout
-        } else if ((listf = fopen(list, "w")) == NULL) {
+        } else if ((listf = fopen(list, "wb")) == NULL) {
             fprintf(stderr, "cannot open %s for writing: %s\n", list, strerror(errno));
             exit(1);
         }
-        
         write_listing(listf, state, lines);
         if (listf != stdout) fclose(listf);
+    }
+
+    if (debug_info != NULL) {
+        if (strcmp(debug_info, "-") == 0) {
+            debug_info_f = stdout;
+        }
+        else if ((debug_info_f = fopen(debug_info, "wb")) == NULL) {
+            fprintf(stderr, "cannot open %s for writing: %s\n", debug_info, strerror(errno));
+            exit(1);
+        }
+        write_json_debugger_file(debug_info_f, state, lines);
+        if (debug_info_f != stdout) fclose(debug_info_f);
     }
     
     return 0;

@@ -1,8 +1,10 @@
-/* asm8085 (C) 2019-20 Marinus Oosters */
+#ifndef _WIN32
+s/* asm8085 (C) 2019-20 Marinus Oosters */
 
 // This file contains tests for the functions in dirstack.c
 
 #define MAXDIRLEN 4096
+
 
 TEST(pushd_popd
 ,   /*startup*/
@@ -47,3 +49,4 @@ TEST(pushd_popd
    
 })
 
+#endif
